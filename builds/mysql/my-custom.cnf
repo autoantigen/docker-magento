@@ -1,0 +1,4 @@
+[mysqld]
+innodb_lock_wait_timeout=200
+innodb_strict_mode=0
+max_allowed_packet=500M

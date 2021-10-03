@@ -1,0 +1,114 @@
+version: "2.1"
+
+services:
+  nginx:
+    container_name: nginx
+    build:
+      context: ./builds/nginx
+    expose:
+      - "80"
+      - "443"
+    volumes:
+      - ./projects/test-project/:/var/www/test-project.local/
+    depends_on:
+      - "php_7_3"
+      - "php_7_4"
+    networks:
+      net:
+        ipv4_address: 172.55.0.21
+
+  varnish:
+    container_name: varnish
+    build:
+      context: ./builds/varnish
+    #image: varnish:6.3
+    expose:
+      - "80"
+    depends_on:
+      - "nginx"
+    links:
+      - nginx:backend_host
+    networks:
+      net:
+        ipv4_address: 172.55.0.20
+  
+  php_7_3:
+    container_name: php7.3
+    build:
+      context: ./builds/php/7.3
+    volumes:
+      - ./projects/test-project/:/var/www/test-project.local/
+    networks:
+      - net
+  
+  php_7_4:
+    container_name: php7.4
+    build:
+      context: ./builds/php/7.4
+    volumes:
+      - ./projects/test-project/:/var/www/test-project.local/
+    networks:
+      - net
+
+  elasticsearch7:
+    container_name: elasticsearch7
+    image: elasticsearch:7.10.1
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+    volumes:
+      - db-elastic7:/usr/share/elasticsearch/data
+    networks:
+      net:
+
+  mysql_10_4:
+    container_name: mysql-10.4
+    image: mariadb:10.4
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_USER=magento
+      - MYSQL_PASSWORD=magento
+    volumes:
+      - db-mysql-10.4:/var/lib/mysql
+      - ./builds/mysql:/etc/mysql/conf.d
+    networks:
+      net:
+        ipv4_address: 172.55.0.33
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    command: redis-server
+    volumes:
+      - db-redis:/data
+    networks:
+      net:
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=magento
+      - RABBITMQ_DEFAULT_PASS=magento
+    networks:
+      net:
+
+  mail:
+    container_name: mailhog
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      net:
+
+volumes:
+  db-mysql-10.4:
+  db-redis:
+  db-elastic7:
+
+networks:
+  net:
+    ipam:
+      config:
+        - subnet: 172.55.0.0/24

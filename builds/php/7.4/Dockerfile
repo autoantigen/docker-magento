@@ -1,0 +1,38 @@
+FROM thecodingmachine/php:7.4-v4-fpm
+
+ENV PHP_INI_MEMORY_LIMIT=-1
+ENV PHP_EXTENSION_BCMATH=1
+ENV PHP_EXTENSION_GD=1
+ENV PHP_EXTENSION_MCRYPT=1
+ENV PHP_EXTENSION_REDIS=1
+ENV PHP_EXTENSION_IMAGICK=1
+ENV PHP_EXTENSION_SODIUM=1
+ENV PHP_EXTENSION_MEMCACHED=0
+ENV PHP_EXTENSION_INTL=1
+ENV PHP_EXTENSION_XSL=1
+ENV PHP_INI_ERROR_REPORTING="E_ALL & ~E_DEPRECATED"
+#ENV PHP_INI_XDEBUG__IDEKEY=PHPSTORM
+#ENV PHP_INI_XDEBUG__PROFILER_ENABLE=0
+#ENV PHP_INI_XDEBUG__REMOTE_AUTOSTART=1
+#ENV PHP_INI_XDEBUG__REMOTE_CONNECT_BACK=1
+#ENV PHP_INI_XDEBUG__MAX_NESTING_LEVEL=512
+#ENV PHP_INI_XDEBUG__PROFILER_ENABLE_TRIGGER=1
+#ENV PHP_INI_XDEBUG__PROFILER_OUTPUT_DIR=/var/www/html/profiler
+#ENV PHP_INI_XDEBUG__REMOTE_AUTOSTART=1
+#ENV PHP_INI_XDEBUG__MAX_NESTING_LEVEL=512
+#ENV PHP_INI_MAX_INPUT_VARS=10000
+#ENV PHP_INI_UPLOAD_MAX_FILESIZE=20M
+ENV PHP_INI_POST_MAX_SIZE=20M
+ENV PHP_EXTENSION_XDEBUG=1
+ENV PHP_INI_SENDMAIL_PATH="/usr/bin/mhsendmail --smtp-addr mailhog:1025"
+
+USER root
+RUN apt-get update &&\
+    apt-get install --no-install-recommends --assume-yes --quiet ca-certificates curl git &&\
+    rm -rf /var/lib/apt/lists/*
+RUN curl -Lsf 'https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz' | tar -C '/usr/local' -xvzf -
+RUN composer self-update
+ENV PATH /usr/local/go/bin:$PATH
+RUN go get github.com/mailhog/mhsendmail
+RUN cp /root/go/bin/mhsendmail /usr/bin/mhsendmail
+USER docker
